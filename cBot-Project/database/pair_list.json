@@ -1,0 +1,43 @@
+{
+    "Top29FTX": [
+        "BTC/USDT",
+        "ETH/USDT",
+        "BNB/USDT",
+        "LTC/USDT",
+        "DOGE/USDT",
+        "XRP/USDT",
+        "SOL/USDT",
+        "SHIB/USDT",
+        "LINK/USDT",
+        "UNI/USDT",
+        "MATIC/USDT",
+        "AXS/USDT",
+        "CAKE/USDT",
+        "FTT/USDT",
+        "TRX/USDT",
+        "BCH/USDT",
+        "FTM/USDT",
+        "GRT/USDT",
+        "AAVE/USDT",
+        "OMG/USDT",
+        "LRC/USDT",
+        "SUSHI/USDT",
+        "MANA/USDT",
+        "SRM/USDT",
+        "RUNE/USDT",
+        "SAND/USDT",
+        "CHZ/USDT",
+        "CRV/USDT",
+        "RAY/USDT"
+    ],
+    "Top5FTX": [
+        "BTC/USDT",
+        "ETH/USDT",
+        "LTC/USDT",
+        "ADA/USDT",
+        "TRX/USDT"
+    ],
+    "Top1FTX":[
+        "BTC/USDT"
+    ]
+}
