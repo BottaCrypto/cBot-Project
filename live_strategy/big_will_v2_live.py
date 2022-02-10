@@ -61,9 +61,9 @@ print("Data and Indicators loaded 100%")
 def buyCondition(row, previousRow=None):
     if (
         row['AO'] >= 0
-        #and previousRow['AO'] > row['AO']
-        #and row['WillR'] < willOverSold
-        #and row['EMA100'] > row['EMA200']
+        and previousRow['AO'] > row['AO']
+        and row['WillR'] < willOverSold
+        and row['EMA100'] > row['EMA200']
     ):
         return True
     else:
@@ -72,9 +72,9 @@ def buyCondition(row, previousRow=None):
 # -- Condition to SELL market --
 def sellCondition(row, previousRow=None):
     if (
-        row['AO'] < 0
-        #and row['STOCH_RSI'] > stochOverSold)
-        #or row['WillR'] > willOverBought
+        (row['AO'] < 0
+        and row['STOCH_RSI'] > stochOverSold)
+        or row['WillR'] > willOverBought
     ):
         return True
     else:
