@@ -12,9 +12,9 @@ now = datetime.now()
 print(now.strftime("%d-%m %H:%M:%S"))
 
 ftx = SpotFtx(
-        apiKey='eDB6Zf_qJ1bJedl0Kb5FtfecjLUBrANBCztr9vJZ',
-        secret='ZOnAUCFKArmLQNjm_yEG6Gz23YVFVwWjRrFyWT8P',
-        subAccountName='Bottacrypto'
+        apiKey='',
+        secret='',
+        subAccountName=''
     )
 
 pairList = [
@@ -52,9 +52,9 @@ print("Data and Indicators loaded 100%")
 def buyCondition(row, previousRow=None):
     if (
         row['AO'] >= 0
-        #and previousRow['AO'] > row['AO']
-        #and row['WillR'] < -85
-        #and row['EMA100'] > row['EMA200']
+        and previousRow['AO'] > row['AO']
+        and row['WillR'] < -85
+        and row['EMA100'] > row['EMA200']
     ):
         return True
     else:
@@ -63,9 +63,9 @@ def buyCondition(row, previousRow=None):
 # -- Condition to SELL market --
 def sellCondition(row, previousRow=None):
     if (
-        row['AO'] < 0
-        #and row['STOCH_RSI'] > 0.2)
-        #or row['WillR'] > -10
+        (row['AO'] < 0
+        and row['STOCH_RSI'] > 0.2)
+        or row['WillR'] > -10
     ):
         return True
     else:
