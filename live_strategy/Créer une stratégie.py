@@ -19,16 +19,24 @@ ftx = SpotFtx(
 
 pairList = [
     'BTC/USDT',
-    'ETH/USDT',
-    'BNB/USDT'
+    'ETH/USDT'
 ]
 
 timeframe = '1h'
 
+# -- Indicator variable --
+aoParam1 = 6
+aoParam2 = 22
+stochWindow = 14
+willWindow = 14
+
 # -- Hyper parameters --
 maxOpenPosition = 3
-#TpPct = 0.15
-# SlPct = 0.015
+stochOverBought = 0.8
+stochOverSold = 0.2
+willOverSold = -85
+willOverBought = -10
+TpPct = 0.15
 
 dfList = {}
 for pair in pairList:
@@ -41,9 +49,9 @@ for coin in dfList:
     dfList[coin].drop(columns=dfList[coin].columns.difference(['open','high','low','close','volume']), inplace=True)
 
     # -- Indicators, you can edit every value --
-    dfList[coin]['AO']= ta.momentum.awesome_oscillator(dfList[coin]['high'],dfList[coin]['low'],window1=aoParam6,window2=aoParam22)
-    dfList[coin]['STOCH_RSI'] = ta.momentum.stochrsi(close=dfList[coin]['close'], window=14)
-    dfList[coin]['WillR'] = ta.momentum.williams_r(high=dfList[coin]['high'], low=dfList[coin]['low'], close=dfList[coin]['close'], lbp=14)
+    dfList[coin]['AO']= ta.momentum.awesome_oscillator(dfList[coin]['high'],dfList[coin]['low'],window1=aoParam1,window2=aoParam2)
+    dfList[coin]['STOCH_RSI'] = ta.momentum.stochrsi(close=dfList[coin]['close'], window=stochWindow)
+    dfList[coin]['WillR'] = ta.momentum.williams_r(high=dfList[coin]['high'], low=dfList[coin]['low'], close=dfList[coin]['close'], lbp=willWindow)
     dfList[coin]['EMA100'] =ta.trend.ema_indicator(close=dfList[coin]['close'], window=100)
     dfList[coin]['EMA200'] =ta.trend.ema_indicator(close=dfList[coin]['close'], window=200)
         
@@ -53,9 +61,9 @@ print("Data and Indicators loaded 100%")
 def buyCondition(row, previousRow=None):
     if (
         row['AO'] >= 0
-        and previousRow['AO'] > row['AO']
-        and row['WillR'] < -85
-        and row['EMA100'] > row['EMA200']
+        #and previousRow['AO'] > row['AO']
+        #and row['WillR'] < willOverSold
+        #and row['EMA100'] > row['EMA200']
     ):
         return True
     else:
@@ -64,23 +72,23 @@ def buyCondition(row, previousRow=None):
 # -- Condition to SELL market --
 def sellCondition(row, previousRow=None):
     if (
-        (row['AO'] < 0
-        and row['STOCH_RSI'] > 0.2)
-        or row['WillR'] > -10
+        row['AO'] < 0
+        #and row['STOCH_RSI'] > stochOverSold)
+        #or row['WillR'] > willOverBought
     ):
         return True
     else:
         return False
     
 coinBalance = ftx.get_all_balance()
-coinInUsdt = ftx.get_all_balance_in_usdt()
-usdtBalance = coinBalance['USDT']
+coinInUsd = ftx.get_all_balance_in_usd()
+usdBalance = coinBalance['USDT']
 del coinBalance['USDT']
-del coinInUsdt['USDT']
-totalBalanceInUsd = usdBalance + sum(coinInUsdt.values())
+del coinInUsd['USDT']
+totalBalanceInUsd = usdBalance + sum(coinInUsd.values())
 coinPositionList = []
-for coin in coinInUsdt:
-    if coinInUsdt[coin] > 0.05 * totalBalanceInUsdt:
+for coin in coinInUsd:
+    if coinInUsd[coin] > 0.05 * totalBalanceInUsd:
         coinPositionList.append(coin)
 openPositions = len(coinPositionList)
 
@@ -103,31 +111,28 @@ if openPositions < maxOpenPosition:
         if coin not in coinPositionList:
             if buyCondition(dfList[coin].iloc[-2], dfList[coin].iloc[-3]) == True and openPositions < maxOpenPosition:
                 time.sleep(1)
-                usdtBalance = ftx.get_balance_of_one_coin('USDT')
+                usdBalance = ftx.get_balance_of_one_coin('USDT')
                 symbol = coin+'/USDT'
 
                 buyPrice = float(ftx.convert_price_to_precision(symbol, ftx.get_bid_ask_price(symbol)['ask'])) 
-                #slPrice = float(ftx.convert_price_to_precision(symbol, buyPrice - SlPct * buyPrice))
-                #tpPrice = float(ftx.convert_price_to_precision(symbol, buyPrice + TpPct * buyPrice))
-                buyQuantityInUsdt = usdtBalance * 1/(maxOpenPosition-openPositions)
+                tpPrice = float(ftx.convert_price_to_precision(symbol, buyPrice + TpPct * buyPrice))
+                buyQuantityInUsd = usdBalance * 1/(maxOpenPosition-openPositions)
 
                 if openPositions == maxOpenPosition - 1:
-                    buyQuantityInUsdt = 0.95 * buyQuantityInUsdt
+                    buyQuantityInUsd = 0.95 * buyQuantityInUsd
 
-                buyAmount = ftx.convert_amount_to_precision(symbol, buyQuantityInUsdt/buyPrice)
+                buyAmount = ftx.convert_amount_to_precision(symbol, buyQuantityInUsd/buyPrice)
 
                 buy = ftx.place_market_order(symbol,'buy',buyAmount)
                 time.sleep(2)
-                #sl = ftx.place_market_stop_loss(symbol,'sell',buyAmount,slPrice)
-                #tp = ftx.place_limit_order(symbol,'sell',buyAmount,tpPrice)
+                tp = ftx.place_limit_order(symbol,'sell',buyAmount,tpPrice)
                 try:
                     tp["id"]
                 except:
                     time.sleep(2)
-                    #sl = ftx.place_market_stop_loss(symbol,'sell',buyAmount,slPrice)
-                    #tp = ftx.place_limit_order(symbol,'sell',buyAmount,tpPrice)
+                    tp = ftx.place_limit_order(symbol,'sell',buyAmount,tpPrice)
                     pass
                 print("Buy",buyAmount,coin,'at',buyPrice,buy)
-                #print("Place",buyAmount,coin,"TP at",tpPrice, tp)
-                #print("Place",buyAmount,coin,"SL at",slPrice, sl)
+                print("Place",buyAmount,coin,"TP at",tpPrice, tp)
+
                 openPositions += 1
